@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-multi-deployment
+  labels:
+    app: nginx-multi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-multi
+  template:
+    metadata:
+      labels:
+        app: nginx-multi
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+      - name: squid
+        image: sameersbn/squid:3.5.27-2       

@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: private-reg
+spec:
+  containers:
+  - name: copyimage-controller
+    image: "dharmjit/copyimage-controller"
+    env:
+      - name: PRIV_OCI_REGISTRY
+        valueFrom:
+          secretKeyRef:
+            name: dockersecret
+            key: PRIV_OCI_REGISTRY
+      - name: PRIV_OCI_REPOSITORY
+        valueFrom:
+          secretKeyRef:
+            name: dockersecret
+            key: PRIV_OCI_REPOSITORY
+      - name: PRIV_OCI_REGISTRY_USERNAME
+        valueFrom:
+          secretKeyRef:
+            name: dockersecret
+            key: PRIV_OCI_REGISTRY_USERNAME
+      - name: PRIV_OCI_REGISTRY_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: dockersecret
+            key: PRIV_OCI_REGISTRY_PASSWORD                        
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "100m"
+      limits:
+        memory: "64Mi"
+        cpu: "100m"
+        
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dockersecret
+data:
+  PRIV_OCI_REGISTRY: "index.docker.io"
+  PRIV_OCI_REPOSITORY: "dharmjit"
+  PRIV_OCI_REGISTRY_USERNAME: "dharmjit"
+  PRIV_OCI_REGISTRY_PASSWORD: "main22atthaan"

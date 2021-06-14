@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-single-deployment
+  labels:
+    app: nginx-single
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-single
+  template:
+    metadata:
+      labels:
+        app: nginx-single
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
