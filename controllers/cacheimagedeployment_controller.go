@@ -67,6 +67,7 @@ func (r *CacheImageDeploymentReconciler) Reconcile(ctx context.Context, req ctrl
 	// TODO better error handling
 	// currently we ignore any errors and proceed with deployment creation with applied state
 	if err != nil {
+		logger.Error(err, "Error occured in cloneImage")
 		return reconcile.Result{}, nil
 	}
 	deployment.Spec.Template = *podspec
@@ -88,5 +89,6 @@ func (r *CacheImageDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) erro
 				return false
 			},
 		}).
+		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

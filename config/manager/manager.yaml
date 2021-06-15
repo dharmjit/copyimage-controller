@@ -5,6 +5,17 @@ metadata:
     control-plane: controller-manager
   name: system
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dockersecret
+  namespace: system
+data:
+  PRIV_OCI_REGISTRY: ""
+  PRIV_OCI_REPOSITORY: ""
+  PRIV_OCI_REGISTRY_USERNAME: ""
+  PRIV_OCI_REGISTRY_PASSWORD: ""
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -29,8 +40,29 @@ spec:
         - /manager
         args:
         - --leader-elect
-        image: dharmjit/copyimage-controller:latest
+        image: dharmjit/copyimage-controller
         name: manager
+        env:
+        - name: PRIV_OCI_REGISTRY
+          valueFrom:
+            secretKeyRef:
+              name: dockersecret
+              key: PRIV_OCI_REGISTRY
+        - name: PRIV_OCI_REPOSITORY
+          valueFrom:
+            secretKeyRef:
+              name: dockersecret
+              key: PRIV_OCI_REPOSITORY
+        - name: PRIV_OCI_REGISTRY_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: dockersecret
+              key: PRIV_OCI_REGISTRY_USERNAME
+        - name: PRIV_OCI_REGISTRY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dockersecret
+              key: PRIV_OCI_REGISTRY_PASSWORD                        
         securityContext:
           allowPrivilegeEscalation: false
         livenessProbe:
