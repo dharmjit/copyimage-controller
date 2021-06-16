@@ -21,7 +21,7 @@ import (
 	"reflect"
 	"time"
 
-	"dharmjit.dev/cacheimage/utils"
+	"dharmjit.dev/copyimage/utils"
 	v1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -32,52 +32,48 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// CacheImageDeploymentReconciler reconciles a CacheImageDeployment object
-type CacheImageDeploymentReconciler struct {
+// CopyImageDaemonsetReconciler reconciles a CopyImageDaemonset object
+type CopyImageDaemonsetReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=dsapps.dharmjit.dev,resources=cacheimagedeployments,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=dsapps.dharmjit.dev,resources=cacheimagedeployments/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=dsapps.dharmjit.dev,resources=cacheimagedeployments/finalizers,verbs=update
+//+kubebuilder:rbac:groups=dsapps.dharmjit.dev,resources=copyimagedaemonsets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=dsapps.dharmjit.dev,resources=copyimagedaemonsets/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=dsapps.dharmjit.dev,resources=copyimagedaemonsets/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the CacheImageDeployment object against the actual cluster state, and then
+// the CopyImageDaemonset object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
-func (r *CacheImageDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *CopyImageDaemonsetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-
-	// your logic here
 	if req.Namespace == "kube-system" {
 		return reconcile.Result{}, nil
 	}
 	logger.Info("Event Received", "Info", req.NamespacedName)
-	deployment := &v1.Deployment{}
-	err := r.Get(ctx, req.NamespacedName, deployment)
+	daemonset := &v1.DaemonSet{}
+	err := r.Get(ctx, req.NamespacedName, daemonset)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	podspec, err := utils.CloneImage(&deployment.Spec.Template)
+	podspec, err := utils.CloneImage(&daemonset.Spec.Template)
 	// TODO better error handling
 	// currently we ignore any errors and proceed with deployment creation with applied state
 	if err != nil {
-		logger.Error(err, "Error occured in cloneImage")
 		return reconcile.Result{}, nil
 	}
 
 	// update only if there are changes in the spec
-	if !reflect.DeepEqual(deployment.Spec.Template.Spec, *podspec) {
-		deployment.Spec.Template = *podspec
-		//TODO add rollout message
-		err = r.Client.Update(ctx, deployment)
+	if !reflect.DeepEqual(daemonset.Spec.Template, *podspec) {
+		daemonset.Spec.Template = *podspec
+		err = r.Client.Update(ctx, daemonset)
 		if err != nil {
 			//TODO handle errors better for optimistic concurrency
 			return reconcile.Result{RequeueAfter: 1 * time.Second}, nil
@@ -89,9 +85,10 @@ func (r *CacheImageDeploymentReconciler) Reconcile(ctx context.Context, req ctrl
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *CacheImageDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *CopyImageDaemonsetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1.Deployment{}).
+		// Uncomment the following line adding a pointer to an instance of the controlled resource as an argument
+		For(&v1.DaemonSet{}).
 		WithEventFilter(predicate.Funcs{
 			DeleteFunc: func(e event.DeleteEvent) bool {
 				// Suppress Delete events to avoid filtering them out in the Reconcile function

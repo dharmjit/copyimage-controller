@@ -1,4 +1,4 @@
-module dharmjit.dev/cacheimage
+module dharmjit.dev/copyimage
 
 go 1.16
 

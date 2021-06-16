@@ -13,4 +13,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: dharmjit/copyimage-controller
-  newTag: latest
+  newTag: "0.1"

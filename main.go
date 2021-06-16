@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"dharmjit.dev/cacheimage/controllers"
+	"dharmjit.dev/copyimage/controllers"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -76,18 +76,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.CacheImageDeploymentReconciler{
+	if err = (&controllers.CopyImageDeploymentReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "CacheImageDeployment")
+		setupLog.Error(err, "unable to create controller", "controller", "CopyImageDeployment")
 		os.Exit(1)
 	}
-	if err = (&controllers.CacheImageDaemonsetReconciler{
+	if err = (&controllers.CopyImageDaemonsetReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "CacheImageDaemonset")
+		setupLog.Error(err, "unable to create controller", "controller", "CopyImageDaemonset")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

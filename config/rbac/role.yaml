@@ -9,7 +9,7 @@ rules:
 - apiGroups:
   - dsapps.dharmjit.dev
   resources:
-  - cacheimagedaemonsets
+  - copyimagedaemonsets
   verbs:
   - create
   - delete
@@ -21,13 +21,13 @@ rules:
 - apiGroups:
   - dsapps.dharmjit.dev
   resources:
-  - cacheimagedaemonsets/finalizers
+  - copyimagedaemonsets/finalizers
   verbs:
   - update
 - apiGroups:
   - dsapps.dharmjit.dev
   resources:
-  - cacheimagedaemonsets/status
+  - copyimagedaemonsets/status
   verbs:
   - get
   - patch
@@ -35,7 +35,7 @@ rules:
 - apiGroups:
   - dsapps.dharmjit.dev
   resources:
-  - cacheimagedeployments
+  - copyimagedeployments
   verbs:
   - create
   - delete
@@ -47,13 +47,13 @@ rules:
 - apiGroups:
   - dsapps.dharmjit.dev
   resources:
-  - cacheimagedeployments/finalizers
+  - copyimagedeployments/finalizers
   verbs:
   - update
 - apiGroups:
   - dsapps.dharmjit.dev
   resources:
-  - cacheimagedeployments/status
+  - copyimagedeployments/status
   verbs:
   - get
   - patch

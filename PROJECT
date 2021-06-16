@@ -2,16 +2,16 @@ domain: dharmjit.dev
 layout:
 - go.kubebuilder.io/v3
 projectName: copyimage-controller
-repo: dharmjit.dev/cacheimage
+repo: dharmjit.dev/copyimage
 resources:
 - controller: true
   domain: dharmjit.dev
   group: dsapps
-  kind: CacheImageDeployment
+  kind: CopyImageDeployment
   version: v1alpha1
 - controller: true
   domain: dharmjit.dev
   group: dsapps
-  kind: CacheImageDaemonset
+  kind: CopyImageDaemonset
   version: v1alpha1
 version: "3"

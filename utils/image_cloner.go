@@ -61,6 +61,7 @@ func CloneImage(podTemplateSpec *v1.PodTemplateSpec) (*v1.PodTemplateSpec, error
 			if err != nil {
 				continue
 			}
+			//TODO - requires authentication each time.
 			err = remote.Write(newRef, img, remote.WithAuth(&authn.Basic{Username: username, Password: password}))
 			if err != nil {
 				return podTemplateSpec, err
@@ -77,14 +78,15 @@ func CloneImage(podTemplateSpec *v1.PodTemplateSpec) (*v1.PodTemplateSpec, error
 		if err != nil {
 			continue
 		}
-
+		fmt.Printf("Container Image:%s", container.Image)
 		//TODO externalize the hardcoded registry name
 		if OldRef.Context().RegistryStr() == "index.docker.io" && !strings.HasPrefix(OldRef.Context().RepositoryStr(), repository) {
 			//TODO check if image already exists
-			index := strings.IndexAny(OldRef.Context().RepositoryStr(), "/")
+			index := strings.IndexAny(container.Image, "/")
 			if index != -1 {
 				container.Image = container.Image[index+1:]
 			}
+			fmt.Printf("New Image:%s", container.Image)
 			newImage := fmt.Sprintf("%s/%s/%s", registry, repository, container.Image)
 			newRef, err := name.ParseReference(newImage)
 			if err != nil {
