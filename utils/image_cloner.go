@@ -1,4 +1,4 @@
-package controllers
+package utils
 
 import (
 	"fmt"
@@ -37,26 +37,31 @@ func init() {
 	}
 }
 
-func cloneImage(podTemplateSpec *v1.PodTemplateSpec) (*v1.PodTemplateSpec, error) {
+func CloneImage(podTemplateSpec *v1.PodTemplateSpec) (*v1.PodTemplateSpec, error) {
 	//TODO code can be refactored
-	for i, image := range podTemplateSpec.Spec.InitContainers {
-		OldRef, err := name.ParseReference(image.Image)
+	for i, container := range podTemplateSpec.Spec.InitContainers {
+		OldRef, err := name.ParseReference(container.Image)
 		if err != nil {
-			return podTemplateSpec, err
+			continue
 		}
 		img, err := remote.Image(OldRef)
 		if err != nil {
-			return podTemplateSpec, err
+			continue
 		}
-		newImage := fmt.Sprintf("%s/%s/%s", registry, repository, image.Image)
-		newRef, err := name.ParseReference(newImage)
-		if err != nil {
-			return podTemplateSpec, err
-		}
-		//TODO include more public docker registries
-		if OldRef.Context().RegistryStr() == "index.docker.io" {
+
+		//TODO externalize the hardcoded registry name
+		if OldRef.Context().RegistryStr() == "index.docker.io" && !strings.HasPrefix(OldRef.Context().RepositoryStr(), repository) {
 			//TODO check if image already exists
-			err := remote.Write(newRef, img, remote.WithAuth(&authn.Basic{Username: username, Password: password}))
+			index := strings.IndexAny(OldRef.Context().RepositoryStr(), "/")
+			if index != -1 {
+				container.Image = container.Image[index+1:]
+			}
+			newImage := fmt.Sprintf("%s/%s/%s", registry, repository, container.Image)
+			newRef, err := name.ParseReference(newImage)
+			if err != nil {
+				continue
+			}
+			err = remote.Write(newRef, img, remote.WithAuth(&authn.Basic{Username: username, Password: password}))
 			if err != nil {
 				return podTemplateSpec, err
 			}
@@ -64,34 +69,33 @@ func cloneImage(podTemplateSpec *v1.PodTemplateSpec) (*v1.PodTemplateSpec, error
 		}
 	}
 	for i, container := range podTemplateSpec.Spec.Containers {
-		fmt.Printf("Container Image Name:%s\n", container.Image)
 		OldRef, err := name.ParseReference(container.Image)
 		if err != nil {
-			return podTemplateSpec, err
+			continue
 		}
 		img, err := remote.Image(OldRef)
 		if err != nil {
-			return podTemplateSpec, err
+			continue
 		}
-		index := strings.IndexAny(OldRef.Context().RepositoryStr(), "/")
-		if index != -1 {
-			container.Image = container.Image[index+1:]
-		}
-		fmt.Printf("Updated Image Name:%s\n", container.Image)
-		newImage := fmt.Sprintf("%s/%s/%s", registry, repository, container.Image)
-		newRef, err := name.ParseReference(newImage)
-		if err != nil {
-			return podTemplateSpec, err
-		}
-		if OldRef.Context().RegistryStr() == "index.docker.io" {
+
+		//TODO externalize the hardcoded registry name
+		if OldRef.Context().RegistryStr() == "index.docker.io" && !strings.HasPrefix(OldRef.Context().RepositoryStr(), repository) {
 			//TODO check if image already exists
-			err := remote.Write(newRef, img, remote.WithAuth(&authn.Basic{Username: username, Password: password}))
+			index := strings.IndexAny(OldRef.Context().RepositoryStr(), "/")
+			if index != -1 {
+				container.Image = container.Image[index+1:]
+			}
+			newImage := fmt.Sprintf("%s/%s/%s", registry, repository, container.Image)
+			newRef, err := name.ParseReference(newImage)
+			if err != nil {
+				continue
+			}
+			err = remote.Write(newRef, img, remote.WithAuth(&authn.Basic{Username: username, Password: password}))
 			if err != nil {
 				return podTemplateSpec, err
 			}
 			podTemplateSpec.Spec.Containers[i].Image = newImage
 		}
 	}
-	fmt.Printf("Pod Template Spec:%v\n", podTemplateSpec)
 	return podTemplateSpec, nil
 }

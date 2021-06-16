@@ -18,8 +18,10 @@ package controllers
 
 import (
 	"context"
+	"reflect"
 	"time"
 
+	"dharmjit.dev/cacheimage/utils"
 	v1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -63,18 +65,25 @@ func (r *CacheImageDeploymentReconciler) Reconcile(ctx context.Context, req ctrl
 		return reconcile.Result{}, err
 	}
 
-	podspec, err := cloneImage(&deployment.Spec.Template)
+	podspec, err := utils.CloneImage(&deployment.Spec.Template)
 	// TODO better error handling
 	// currently we ignore any errors and proceed with deployment creation with applied state
 	if err != nil {
 		logger.Error(err, "Error occured in cloneImage")
 		return reconcile.Result{}, nil
 	}
-	deployment.Spec.Template = *podspec
-	err = r.Client.Update(ctx, deployment)
-	if err != nil {
-		//TODO handle errors better for optimistic concurrency
-		return reconcile.Result{RequeueAfter: 1 * time.Second}, nil
+
+	// update only if there are changes in the spec
+	if !reflect.DeepEqual(deployment.Spec.Template.Spec, *podspec) {
+		deployment.Spec.Template = *podspec
+		//TODO add rollout message
+		err = r.Client.Update(ctx, deployment)
+		if err != nil {
+			//TODO handle errors better for optimistic concurrency
+			return reconcile.Result{RequeueAfter: 1 * time.Second}, nil
+		}
+	} else {
+		return reconcile.Result{}, nil
 	}
 	return ctrl.Result{RequeueAfter: 5 * time.Minute}, nil
 }
@@ -89,6 +98,5 @@ func (r *CacheImageDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) erro
 				return false
 			},
 		}).
-		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

@@ -18,13 +18,17 @@ package controllers
 
 import (
 	"context"
+	"reflect"
 	"time"
 
+	"dharmjit.dev/cacheimage/utils"
 	v1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -59,17 +63,23 @@ func (r *CacheImageDaemonsetReconciler) Reconcile(ctx context.Context, req ctrl.
 		return reconcile.Result{}, err
 	}
 
-	podspec, err := cloneImage(&daemonset.Spec.Template)
+	podspec, err := utils.CloneImage(&daemonset.Spec.Template)
 	// TODO better error handling
 	// currently we ignore any errors and proceed with deployment creation with applied state
 	if err != nil {
 		return reconcile.Result{}, nil
 	}
-	daemonset.Spec.Template = *podspec
-	err = r.Client.Update(ctx, daemonset)
-	if err != nil {
-		//TODO handle errors better for optimistic concurrency
-		return reconcile.Result{RequeueAfter: 1 * time.Second}, nil
+
+	// update only if there are changes in the spec
+	if !reflect.DeepEqual(daemonset.Spec.Template, *podspec) {
+		daemonset.Spec.Template = *podspec
+		err = r.Client.Update(ctx, daemonset)
+		if err != nil {
+			//TODO handle errors better for optimistic concurrency
+			return reconcile.Result{RequeueAfter: 1 * time.Second}, nil
+		}
+	} else {
+		return reconcile.Result{}, nil
 	}
 	return ctrl.Result{RequeueAfter: 5 * time.Minute}, nil
 }
@@ -79,5 +89,11 @@ func (r *CacheImageDaemonsetReconciler) SetupWithManager(mgr ctrl.Manager) error
 	return ctrl.NewControllerManagedBy(mgr).
 		// Uncomment the following line adding a pointer to an instance of the controlled resource as an argument
 		For(&v1.DaemonSet{}).
+		WithEventFilter(predicate.Funcs{
+			DeleteFunc: func(e event.DeleteEvent) bool {
+				// Suppress Delete events to avoid filtering them out in the Reconcile function
+				return false
+			},
+		}).
 		Complete(r)
 }

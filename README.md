@@ -30,7 +30,7 @@ Local Dev:
 - Update code with your settings
   - Update Makefile with your Docker Repository
     - IMG ?= {your_repo_name}/copyimage-controller:latest
-  - Update Secret `dockersecret` defined in `config/manager/manager.yaml` with base64 values applicable for your repo
+  - Update Secret `dockersecret` defined in `config/manager/manager.yaml` with base64 values applicable for you
 
 - Setup Local Dev cluster
     - kind [kind](https://kind.sigs.k8s.io/)
@@ -40,17 +40,36 @@ Local Dev:
         - Test the setup `kind get cluster` and `kubectl get nodes`
 - Run the controller
     - Change directory in another shell `cd copyimage-controller`
-    - Make run with your credentials `PRIV_OCI_REGISTRY=<<>> PRIV_OCI_REPOSITORY=<<>> PRIV_OCI_REGISTRY_USERNAME=<<>> PRIV_OCI_REGISTRY_PASSWORD=<<>> make run`
+    - Make run with your credentials `PRIV_OCI_REGISTRY=index.docker.io PRIV_OCI_REPOSITORY=your_repo_name PRIV_OCI_REGISTRY_USERNAME=your_username PRIV_OCI_REGISTRY_PASSWORD=your password make run`
 
 - Verify the controller
     - `cd copyimage-controller/test`
     - `kubectl create -f nginx-singlecontainer.yaml`
     - `kubectl get deploy/nginx-single-deployment -o yaml`
+
 - Deploy the controller
+    - set below variables in your terminal
+        ```
+        export PRIV_OCI_REGISTRY="index.docker.io"
+        export PRIV_OCI_REPOSITORY=""
+        export PRIV_OCI_REGISTRY_USERNAME=""
+        export PRIV_OCI_REGISTRY_PASSWORD=""```
     - Build Controller Docker Image `make docker-build`
     - Push Controller Docker Image `make docker-push`
     - Deploy Controller and other Manifests `make deploy`
 
+- Pull Image
+
+    `docker push dharmjit/copyimage-controller`
+
+## TODO
+
+- [ ] Do not Remote Write Image if it already exists
+- [ ] Update Message for `kubectl rollout history`
+- [ ] Concurrency Handling of `Utils.CloneImage` Method
+- [ ] Handle Optimistic Concurrency effectively if possible
+- [ ] Better Handle `utils.CloneImage` errors
+- [ ] Externalize the Hardcoded Public Registry Name. It could be a list of public  registries
 ## Supplementary Resources
 
 For those who are interested, there is documentation on kubebuilder available here:
