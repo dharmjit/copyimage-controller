@@ -12,9 +12,9 @@ metadata:
   namespace: system
 data:
   PRIV_OCI_REGISTRY: "aW5kZXguZG9ja2VyLmlvCg=="
-  PRIV_OCI_REPOSITORY: "ZGhhcm1qaXQK"
-  PRIV_OCI_REGISTRY_USERNAME: "ZGhhcm1qaXQK"
-  PRIV_OCI_REGISTRY_PASSWORD: "bWFpbjIyYXR0aGFhbgo="
+  PRIV_OCI_REPOSITORY: ""
+  PRIV_OCI_REGISTRY_USERNAME: ""
+  PRIV_OCI_REGISTRY_PASSWORD: ""
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -42,6 +42,7 @@ spec:
         - --leader-elect
         image: dharmjit/copyimage-controller:0.1
         name: manager
+        imagePullPolicy: Always
         env:
         - name: PRIV_OCI_REGISTRY
           valueFrom:

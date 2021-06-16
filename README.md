@@ -3,11 +3,30 @@ To copy public registry container images referenced in Deployment/DaemonSets to 
 
 > Currently only support Docker(index.docker.io) registry
 
+
+## Development
 This controller is developed using [kubebuilder](https://book.kubebuilder.io). As we do not require any CRDs for this controller, API Types creation is skipped.
 
-### Dev CopyImage Controller
+Below controllers are created for watching/reconciling `deployments` and `daemonsets` respectively. Both controllers filters onl create/update events
 
-Local Dev:
+```go
+// CopyImageController for Deployments
+func (r *CopyImageDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&v1.Deployment{}).
+		WithEventFilter(predicate.Funcs{
+			DeleteFunc: func(e event.DeleteEvent) bool {
+				// Suppress Delete events to avoid filtering them out in the Reconcile function
+				return false
+			},
+		}).
+		Complete(r)
+}
+```
+
+There a utility, `utils.CloneImage` which intialize the private registry credentials along with the main logic to check/copy images to private registry.
+### Local Setup:
+
 - Prerequisite
     Make sure the following are installed.
     - Install Git
@@ -47,7 +66,7 @@ Local Dev:
     - `kubectl create -f nginx-singlecontainer.yaml`
     - `kubectl get deploy/nginx-single-deployment -o yaml`
 
-- Deploy the controller
+- Deploy the controller as a deployment
     - set below variables in your terminal
         ```
         export PRIV_OCI_REGISTRY="index.docker.io"
@@ -58,13 +77,10 @@ Local Dev:
     - Push Controller Docker Image `make docker-push`
     - Deploy Controller and other Manifests `make deploy`
 
-- Pull Image
-
-    `docker push dharmjit/copyimage-controller`
-
 ## TODO
 
 - [ ] Do not Remote Write Image if it already exists
+- [ ] Initialize an OCI client to reduce repeated authention with `remote.Write`
 - [ ] Update Message for `kubectl rollout history`
 - [ ] Concurrency Handling of `Utils.CloneImage` Method
 - [ ] Handle Optimistic Concurrency effectively if possible
