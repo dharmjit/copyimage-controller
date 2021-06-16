@@ -5,9 +5,14 @@ To copy public registry container images referenced in Deployment/DaemonSets to 
 
 
 ## Development
-This controller is developed using [kubebuilder](https://book.kubebuilder.io). As we do not require any CRDs for this controller, API Types creation is skipped.
+This controller is developed using [kubebuilder](https://book.kubebuilder.io) to generate all the bootstrap code as well as kuberetes manifests. As we do not require any CRDs for this controller, API Types creation is skipped.
 
-Below controllers are created for watching/reconciling `deployments` and `daemonsets` respectively. Both controllers filters onl create/update events
+Below controllers are created for watching/reconciling `deployments` and `daemonsets` respectively. 
+
+- CopyImageDeploymentReconciler
+- CopyImageDaemonsetReconciler
+
+Both controllers filters only create/update events on their respective watch objects as shown for CopyImageDeploymentReconciler
 
 ```go
 // CopyImageController for Deployments
