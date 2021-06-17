@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/go-logr/logr"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -37,7 +38,7 @@ func init() {
 	}
 }
 
-func CloneImage(podTemplateSpec *v1.PodTemplateSpec) (*v1.PodTemplateSpec, error) {
+func CloneImage(logr logr.Logger, podTemplateSpec *v1.PodTemplateSpec) (*v1.PodTemplateSpec, error) {
 	//TODO code can be refactored
 	for i, container := range podTemplateSpec.Spec.InitContainers {
 		OldRef, err := name.ParseReference(container.Image)
@@ -70,6 +71,7 @@ func CloneImage(podTemplateSpec *v1.PodTemplateSpec) (*v1.PodTemplateSpec, error
 		}
 	}
 	for i, container := range podTemplateSpec.Spec.Containers {
+		logr.Info("Looping over containers", "Image", container.Image)
 		OldRef, err := name.ParseReference(container.Image)
 		if err != nil {
 			continue
@@ -78,16 +80,16 @@ func CloneImage(podTemplateSpec *v1.PodTemplateSpec) (*v1.PodTemplateSpec, error
 		if err != nil {
 			continue
 		}
-		fmt.Printf("Container Image:%s", container.Image)
 		//TODO externalize the hardcoded registry name
 		if OldRef.Context().RegistryStr() == "index.docker.io" && !strings.HasPrefix(OldRef.Context().RepositoryStr(), repository) {
+			logr.Info("Matches Business criteria of being a public Image", "Repo", OldRef.Context().RepositoryStr())
 			//TODO check if image already exists
 			index := strings.IndexAny(container.Image, "/")
 			if index != -1 {
 				container.Image = container.Image[index+1:]
 			}
-			fmt.Printf("New Image:%s", container.Image)
 			newImage := fmt.Sprintf("%s/%s/%s", registry, repository, container.Image)
+			logr.Info("Container Image Spec will be updated", "New Image", newImage)
 			newRef, err := name.ParseReference(newImage)
 			if err != nil {
 				continue

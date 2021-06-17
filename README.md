@@ -3,6 +3,8 @@ To copy public registry container images referenced in Deployment/DaemonSets to 
 
 > Currently only support Docker(index.docker.io) registry
 
+## Demo
+[![asciicast](https://asciinema.org/a/rX2K9kK2p5vsli5vGPIYc7oEW.png)](https://asciinema.org/a/rX2K9kK2p5vsli5vGPIYc7oEW)
 
 ## Development
 This controller is developed using [kubebuilder](https://book.kubebuilder.io) to generate all the bootstrap code as well as kuberetes manifests. As we do not require any CRDs for this controller, API Types creation is skipped.

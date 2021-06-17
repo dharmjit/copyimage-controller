@@ -63,7 +63,7 @@ func (r *CopyImageDaemonsetReconciler) Reconcile(ctx context.Context, req ctrl.R
 		return reconcile.Result{}, err
 	}
 
-	podspec, err := utils.CloneImage(&daemonset.Spec.Template)
+	podspec, err := utils.CloneImage(logger, &daemonset.Spec.Template)
 	// TODO better error handling
 	// currently we ignore any errors and proceed with deployment creation with applied state
 	if err != nil {

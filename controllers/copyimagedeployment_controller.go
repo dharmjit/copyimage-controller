@@ -65,7 +65,7 @@ func (r *CopyImageDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.
 		return reconcile.Result{}, err
 	}
 
-	podspec, err := utils.CloneImage(&deployment.Spec.Template)
+	podspec, err := utils.CloneImage(logger, &deployment.Spec.Template)
 	// TODO better error handling
 	// currently we ignore any errors and proceed with deployment creation with applied state
 	if err != nil {
@@ -92,6 +92,12 @@ func (r *CopyImageDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.
 func (r *CopyImageDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1.Deployment{}).
+		WithEventFilter(predicate.Funcs{
+			UpdateFunc: func(e event.UpdateEvent) bool {
+				// Suppress Update events to avoid filtering them out in the Reconcile function
+				return false
+			},
+		}).
 		WithEventFilter(predicate.Funcs{
 			DeleteFunc: func(e event.DeleteEvent) bool {
 				// Suppress Delete events to avoid filtering them out in the Reconcile function
