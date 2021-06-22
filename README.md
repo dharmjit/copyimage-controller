@@ -87,6 +87,9 @@ There a utility, `utils.CloneImage` which intialize the private registry credent
 ## TODO
 
 - [ ] Do not Remote Write Image if it already exists
+- [ ] Add Namespace filter as predicate
+- [ ] Update Event filter only for Image changes
+- [ ] Custom Resync period
 - [ ] Initialize an OCI client to reduce repeated authention with `remote.Write`
 - [ ] Update Message for `kubectl rollout history`
 - [ ] Concurrency Handling of `Utils.CloneImage` Method
